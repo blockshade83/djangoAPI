@@ -1,0 +1,28 @@
+{% include "./header.html" %}
+{% include "./title.html" %}
+
+<div class="container-fluid">
+    <div class="row">
+
+        {% block gene_list %}
+
+        <div class="col-sm-4" id="gene_list">
+            <h1>D.Bucheria Genes</h1>
+            <table>
+                <tr><th>Gene ID</th></tr>
+
+                <!-- {% for gene in master_genes %}
+                    <tr><td><a href="/gene/{{gene.pk}}" >{{ gene }}</a></td></tr>
+                {% endfor %} -->
+            </table>
+        </div>
+        {% endblock gene_list %}
+
+        <div class="col-sm-8" class="content">
+            {% block content %}Did not render content{% endblock %}
+        </div>
+
+        {% include "./footer.html" %}
+
+    </div>
+</div>
