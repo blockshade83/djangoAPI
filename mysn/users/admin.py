@@ -11,19 +11,20 @@ class CustomUserAdmin(UserAdmin):
     add_form = RegistrationForm
     form = UpdateForm
     model = AppUser
-    list_display = ('email', 'is_staff', 'is_active','first_name','last_name')
+    list_display = ('username','email', 'is_staff', 'is_active','first_name','last_name')
     list_filter = ('email', 'is_staff', 'is_active','first_name','last_name')
     fieldsets = (
-        (None, {'fields': ('password','first_name','last_name','country','about_user')}),
+        (None, {'fields': ('email','password','first_name','last_name','country','about_user')}),
         ('Permissions', {'fields': ('is_staff', 'is_active')}),
     )
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('email', 'password1', 'password2', 'is_staff', 'is_active','first_name','last_name','country','about_user')}
+            'fields': ('username','email', 'password1', 'password2', 'is_staff', 'is_active','first_name','last_name','country','about_user')}
         ),
     )
     search_fields = ('email',)
     ordering = ('email',)
 
 admin.site.register(AppUser, CustomUserAdmin)
+admin.site.register(StatusUpdate)

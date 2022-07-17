@@ -9,7 +9,13 @@
         <ul class="navbar-nav mr-auto" id="navigation">
             <li class="nav-item active"><a class="nav_link" href="/">Home&nbsp;</a></li>
             <li class="nav-item active"><a class="nav_link" href="https://ebi.ac.uk/">EBI&nbsp;</a></li>
-            <li class="nav-item active"><a class="nav_link" href="register/">Register</a></li>
+            {% if user.is_authenticated %}
+            <li class="nav-item active"><a class="nav_link" href="#">Hello, {{ user.first_name }}&nbsp</a></li>
+            <li class="nav-item active"><a class="nav_link" href="{% url 'logout' %}">Logout</a></li>
+            {% else %}
+            <li class="nav-item active"><a class="nav_link" href="{% url 'register' %}">Register&nbsp</a></li>
+            <li class="nav-item active"><a class="nav_link" href="{% url 'login' %}">Login</a></li>
+            {% endif %}
         </ul>
     </div>
 

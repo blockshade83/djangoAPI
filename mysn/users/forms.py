@@ -1,5 +1,5 @@
 from django import forms
-from users.models import AppUser
+from users.models import AppUser, StatusUpdate
 from django.core.exceptions import ValidationError
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 
@@ -27,7 +27,7 @@ class RegistrationForm(UserCreationForm):
 
     class Meta:
         model = AppUser
-        fields = UserCreationForm.Meta.fields + ('email', 'first_name', 'last_name', 'country', 'about_user')
+        fields = ('username', 'email', 'first_name', 'last_name', 'country', 'about_user')
 
 
 class UpdateForm(UserChangeForm):
@@ -51,3 +51,17 @@ class UpdateForm(UserChangeForm):
     class Meta:
         model = AppUser
         fields = ('first_name', 'last_name', 'country', 'about_user')
+
+class StatusUpdateForm(forms.Form):
+    author = 'Author'
+    content = forms.CharField(required = True, label = 'What do you want to talk about?')
+
+    def clean(self):
+        super(forms.Form, self).clean()
+
+        if self.cleaned_data.get('content') == '':
+            raise ValidationError('Status update cannot be empty')
+
+    class Meta:
+        model = StatusUpdate
+        fields = ['author', 'content']

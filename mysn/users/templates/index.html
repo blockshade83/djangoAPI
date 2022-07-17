@@ -1,13 +1,31 @@
 {% extends "./base.html" %}
 
 {% block content %}
-    <h2>Select gene location</h2>
-    <a href="/">Chromosome</a> OR <a href="/">Plasmid</a>
-    <h2>Show Positive Chromosome</h2>
-    <a href="/">Show This List</a>
-    <h2>Create EC Entry</h2>
-    <a href="/">Add EC Entry</a>
-    <h2>Create Gene Entry</h2>
-    <a href="/">Add EC Entry</a>
+
+    {% if user.is_authenticated %}
+        <form id="status_update_form" method="post" action = "{% url 'status_update' %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ status_update_form.as_p }}
+            <input type="submit" name="submit" value="Post" />
+        </form>
+        <br/>
+
+        {% for status_update in status_update_list %}
+            <div class="container-fluid" style="border:1px solid gray;">
+                <p> {{ status_update.posted_on }} <br/> </p>
+                <p> {{ status_update.content }} <br/> </p>
+            </div> <br/>
+        {% endfor %}
+
+    {% else %}
+        <h2>Select gene location</h2>
+        <a href="/">Chromosome</a> OR <a href="/">Plasmid</a>
+        <h2>Show Positive Chromosome</h2>
+        <a href="/">Show This List</a>
+        <h2>Create EC Entry</h2>
+        <a href="/">Add EC Entry</a>
+        <h2>Create Gene Entry</h2>
+        <a href="/">Add EC Entry</a>
+    {% endif %}
 
 {% endblock %}
