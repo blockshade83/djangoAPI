@@ -1,0 +1,32 @@
+{% extends "./base.html" %}
+
+{% block content %}
+
+    <h2>{{ photos_user.first_name }} {{photos_user.last_name }}'s Photos</h2>
+    <div class="container-fluid" style="background-color: seashell">
+        <div class="jumbotron" style="background-color: seashell">
+            <div class="row">
+                {% for photo in photos %}
+                <div class="col-sm-6 col-md-4 col-lg-3" >
+                    <figure>
+                        <img src="{{ photo.url }}" class="img-thumbnail">
+                    </figure>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    {% if upload_form %}
+    <h4>Upload photo</h4>
+    <form id="upload_form" method="post" action = "{% url 'upload_photo' %}" enctype="multipart/form-data">
+        {% csrf_token %}
+        <table>
+            {{ upload_form.as_table }}
+        </table><br/>
+        <input type="submit" name="submit" value="Save" />
+    </form>
+
+    {% endif %}
+
+{% endblock %}

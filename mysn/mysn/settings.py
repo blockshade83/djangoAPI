@@ -38,8 +38,11 @@ INTERNAL_IPS = [
 # Application definition
 
 INSTALLED_APPS = [
+    'channels',
+    'rest_framework',
     'bootstrap4',
-    'users.apps.UsersConfig',
+    'users',
+    'chat',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -76,7 +79,9 @@ TEMPLATES = [
     },
 ]
 
+ASGI_APPLICATION = 'mysn.asgi.application'
 WSGI_APPLICATION = 'mysn.wsgi.application'
+# ASGI_APPLICATION = 'mysn.routing.application'
 
 
 # Database
@@ -133,7 +138,19 @@ AUTH_USER_MODEL = 'users.AppUser'
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/"
 
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
+
 # ACCOUNT_AUTHENTICATION_METHOD = 'email'
 # ACCOUNT_EMAIL_REQUIRED = True
 # ACCOUNT_UNIQUE_EMAIL = True
 # ACCOUNT_USERNAME_REQUIRED = False
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [('127.0.0.1', 6379)]
+        },
+    },
+}

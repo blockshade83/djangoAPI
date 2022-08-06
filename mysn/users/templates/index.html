@@ -1,31 +1,63 @@
 {% extends "./base.html" %}
 
+{% block left_section %}
+
+    {% if user.is_authenticated %}
+        <img src="{{ user.get_photo }}" alt="user profile photo" width="100" height="100">
+        <h4>Friend Requests</h4>
+        <a href="{% url 'current_contacts' %}" style="padding:10px;">Current Contacts</a><br/>
+
+        {% if incoming_connections > 0 %}
+        <a href="{% url 'incoming_connection_requests' %}" style="padding:10px;">Incoming Requests ({{incoming_connections}})</a><br/>
+        {% else %}
+        <p style="color:gray;margin:0;padding-left:10px">Incoming Requests</p>
+        {% endif %}
+
+        {% if outgoing_connections > 0 %}
+        <a href="{% url 'outgoing_connection_requests' %}" style="padding:10px">Outgoing Requests ({{outgoing_connections}})</a>
+        {% else %}
+        <p style="color:gray;margin:0;padding-left:10px;">Outgoing Requests</p>
+        {% endif %}
+
+        <a href="{% url 'media_settings' %}" style="padding:10px">Media Settings</a><br/>
+        <a href="{% url 'update_profile' %}" style="padding:10px">Update Profile</a><br/>
+        <a href="{% url 'gallery' %}" style="padding:10px">Gallery</a><br/>
+
+    {% else %}
+        <p>Some text here</p>
+    {% endif %}
+
+{% endblock %}
+
 {% block content %}
 
     {% if user.is_authenticated %}
         <form id="status_update_form" method="post" action = "{% url 'status_update' %}" enctype="multipart/form-data">
             {% csrf_token %}
+            <p> What do you want to talk about?</p>
             {{ status_update_form.as_p }}
-            <input type="submit" name="submit" value="Post" />
+            <input type="submit" name="submit_status_update" value="Post" />
         </form>
         <br/>
-
+        <h4>My status updates</h4><br/>
         {% for status_update in status_update_list %}
-            <div class="container-fluid" style="border:1px solid gray;">
-                <p> {{ status_update.posted_on }} <br/> </p>
+            <div class="container-fluid" style="border:1px solid lightgray; border-radius: 5px; background-color:white;">
+                <p style="color:gray"> {{ status_update.posted_on }} <br/> </p>
                 <p> {{ status_update.content }} <br/> </p>
             </div> <br/>
         {% endfor %}
 
     {% else %}
-        <h2>Select gene location</h2>
-        <a href="/">Chromosome</a> OR <a href="/">Plasmid</a>
-        <h2>Show Positive Chromosome</h2>
-        <a href="/">Show This List</a>
-        <h2>Create EC Entry</h2>
-        <a href="/">Add EC Entry</a>
-        <h2>Create Gene Entry</h2>
-        <a href="/">Add EC Entry</a>
+        <h2>Some info about Kune</h2>
     {% endif %}
 
-{% endblock %}
+{% endblock content%}
+
+{% block right_section %}
+    {% if user.is_authenticated %}
+        <h4>Chat</h4>
+        {% for contact in contacts %}
+            <a href="/chat/room1">{{ contact.first_name}} {{ contact.last_name }}</a><br/>
+        {% endfor %}
+    {% endif %}
+{% endblock right_section %}

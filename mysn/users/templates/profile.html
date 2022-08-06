@@ -1,0 +1,76 @@
+{% extends "./base.html" %}
+
+{% block content %}
+
+    <!-- all actions relevant only for profiles of users other than the logged in user -->
+    {% if user.is_authenticated and user.id != profile.id %}
+        <h3>{{ profile.first_name }} {{ profile.last_name }}'s Profile</h3>
+        <a href="../get_gallery/{{profile.id}}">User's Gallery</a>
+
+        <!-- Checking if the profile user is a current connection -->
+        {% if current_contact %}
+            <p style="color:gray">You are connected</p>
+        {% else %}
+                <!-- not an active connection, checking if there is any pending request from the profile user -->
+                {% if incoming_connection_status == "pending" %}
+                <p style="color:gray">Connection request pending. Accept Connection?</p>
+                <!-- add Acceptance button and Dismiss buttons -->
+                <!-- add to contact list for both users -->
+                <table>
+                    <tr>
+                        <td>
+                            <form id="connection_accept" method="post" action="{% url 'connect_accept' %}" enctype="multipart/form-data">
+                                {% csrf_token %}
+                                <input type="hidden" id="initiated_by" name="initiated_by" value="{{ profile.id }}"/>
+                                <input type="hidden" id="sent_to" name="sent_to" value="{{ user.id }}"/>
+                                <input type="submit" method="post" name="accept" value="Accept" />
+                            </form>
+                        </td>
+
+                        <td>
+                            <form id="connection_reject" method="post" action="{% url 'connect_reject' %}" enctype="multipart/form-data">
+                                {% csrf_token %}
+                                <input type="hidden" id="initiated_by" name="initiated_by" value="{{ profile.id }}"/>
+                                <input type="hidden" id="sent_to" name="sent_to" value="{{ user.id }}"/>
+                                <input type="submit" method="post" name="accept" value="Dismiss" />
+                            </form>
+                        </td>
+                    </tr>
+                </table>
+                {% else %}
+                    <!-- checking if the current user had previously sent an invite that is pending -->
+                    {% if outgoing_connection_status == "pending" %}
+                        <p style="color:gray">Connection request pending</p>
+                        <form id="connection_withdraw" method="post" action="{% url 'connect_withdraw' %}" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <input type="hidden" id="initiated_by" name="initiated_by" value="{{ user.id }}"/>
+                            <input type="hidden" id="sent_to" name="sent_to" value="{{ profile.id }}"/>
+                            <input type="submit" method="post" name="accept" value="Withdraw Request" />
+                        </form>
+
+                    <!-- no active or pending connection exists, showing a Connect button -->
+                    {% else %}
+                    <form id="connection" method="post" action="{% url 'connect' %}" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <input type="hidden" id="initiated_by" name="initiated_by" value="{{ user.id }}"/>
+                        <input type="hidden" id="sent_to" name="sent_to" value="{{ profile.id }}"/>
+                        <input type="submit" method="post" name="connect" value="Connect" />
+                    </form>
+                    {% endif %}
+                {% endif %}
+        {% endif %}
+        
+        <br/>
+
+        {% for status_update in status_update_list %}
+            <div class="container-fluid" style="border:1px solid lightgray; border-radius: 5px; background-color:white;">
+                <p style="color:gray"> {{ status_update.posted_on }} <br/> </p>
+                <p> {{ status_update.content }} <br/> </p>
+            </div> <br/>
+        {% endfor %}
+
+        {% else %}
+        <h2>Add Text Here</h2>
+    {% endif %}
+
+{% endblock %}

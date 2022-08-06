@@ -1,22 +1,42 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.conf import settings
+import os
+import datetime, time
+
+# from https://stackoverflow.com/questions/25652809/django-file-upload-and-rename
+def content_file_name(instance, filename):
+        ext = filename.split('.')[-1]
+        filename = "%s_%s.%s" % (instance.owner.id, str(int(time.time())), ext)
+        return os.path.join('gallery', filename)
 
 class AppUser(AbstractUser):
-    # email = models.EmailField(null = False, blank = False, unique = True)
-    # first_name = models.CharField(max_length = 50, null = False, blank = False)
-    # last_name = models.CharField(max_length = 100, null = False, blank = False)
     country = models.CharField(max_length = 100, null = False, blank = False)
-    # is_active = models.BooleanField(default=True)
     about_user = models.TextField(null = True, blank = True)
+    contacts = models.ManyToManyField("AppUser", blank = True)
+    photo = models.ImageField(upload_to='profile/', default='default/default_profile.png')
 
-    # objects = AppUserManager()
-
-    # USERNAME_FIELD = 'email'
-    # REQUIRED_FIELDS = []
+    def get_photo(self):
+        if self.photo:
+            print('media/profile/' + str(self.photo))
+            return settings.MEDIA_URL + str(self.photo)
+        return settings.MEDIA_URL + self._meta.get_field('photo').get_default()
 
 class StatusUpdate(models.Model):
-    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete = models.CASCADE)
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, related_name = "author", on_delete = models.CASCADE)
     posted_on = models.DateTimeField(auto_now_add = True)
     content = models.TextField(null = False, blank = False)
 
+class ConnectionRequest(models.Model):
+    initiated_by = models.ForeignKey(AppUser, related_name = "initiated_by", on_delete = models.CASCADE)
+    sent_to = models.ForeignKey(AppUser, related_name = "sent_to", on_delete = models.CASCADE)
+    initiated_on = models.DateTimeField(auto_now_add = True)
+    status = models.CharField(max_length = 20, null = False, blank = False, default = 'pending')
+
+class UserPhoto(models.Model):
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, related_name = "photo_owner", on_delete = models.CASCADE)
+    added_on = models.DateTimeField(auto_now_add = True)
+    photo = models.ImageField(blank = False, upload_to=content_file_name)
+
+    def get_photo(self):
+        return settings.MEDIA_URL + str(self.photo)

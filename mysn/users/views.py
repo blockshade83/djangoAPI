@@ -3,8 +3,12 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_exempt
+from django.db.models import Q
 from .models import *
 from .forms import *
+from .serializers import *
+import os
 
 def index(request):
     if request.user.is_authenticated:
@@ -15,15 +19,29 @@ def index(request):
         for element in status_update_history:
             status_update_list.append(element)
 
-        return render(request, 'index.html', {'status_update_form': status_update_form, 'status_update_list': status_update_list})
+        incoming_connections = ConnectionRequest.objects.filter(Q(sent_to=request.user) & Q(status='pending')).count()
+        outgoing_connections = ConnectionRequest.objects.filter(Q(initiated_by=request.user) & Q(status='pending')).count()
+
+        user_instance = AppUser.objects.get(id=request.user.id)
+        serializer = AppUserSerializer(user_instance)
+        contacts = serializer.data['contacts']
+        contacts_list = []
+        for result in contacts:
+            contact = AppUser.objects.get(id=result)
+            contacts_list.append(contact)
+
+        return render(request, 'index.html', {'status_update_form': status_update_form, 
+                                              'status_update_list': status_update_list,
+                                              'incoming_connections': incoming_connections,
+                                              'outgoing_connections': outgoing_connections,
+                                              'contacts': contacts_list})
     else:
         return render(request, 'index.html')
 
 def register(request):
-
     if request.method == 'POST':
         user_form = RegistrationForm(data = request.POST)
-        if user_form.is_valid:
+        if user_form.is_valid():
             user_form.save()
             email = user_form.cleaned_data.get('email')
             return render(request, 'registration/login.html', {'new_account': True})
@@ -43,7 +61,6 @@ def user_login(request):
                 return HttpResponseRedirect('/')
         else:
             return render(request, 'registration/login.html', {'error': True})
-
     else:
         return render(request, 'registration/login.html')
 
@@ -56,10 +73,275 @@ def status_update(request):
         status_update_form = StatusUpdateForm(data = request.POST)
         if status_update_form.is_valid():
             cleaned_data = status_update_form.cleaned_data
-            print(cleaned_data)
-            status_update_post = StatusUpdate(author = request.user, content = cleaned_data['content'])
-            status_update_post.save()
+            # print(cleaned_data)
+            status_update_record = StatusUpdate(author = request.user, content = cleaned_data['content'])
+            status_update_record.save()
             return HttpResponseRedirect('/')
     else:
-        status_update_form = StatusUpdateForm()
-        return render(request, 'index.html', {'status_update_form': status_update_form})
+        # status_update_form = StatusUpdateForm()
+        return HttpResponse("Invalid request")
+
+@login_required
+def search(request):
+    if request.method == 'GET':
+        search_text = request.GET.get('search_text')
+        results = AppUser.objects.filter(Q(username__icontains=search_text) | Q(first_name__icontains=search_text) | Q(last_name__icontains=search_text))
+        results_list = []
+        for result in results:
+            results_list.append(result)
+        return render(request, 'search_results.html', {'results_list': results_list})
+    else:
+        return HttpResponse("Invalid request")
+
+@login_required
+def get_user_instance(user_id):
+    try:
+        user_id_record = AppUser.objects.get(id=user_id)
+    except AppUser.DoesNotExist:
+        return HttpResponse(status=404)
+    return user_id_record
+
+@login_required
+@csrf_exempt
+def get_profile(request, user_id):
+    try:
+        user_id_record = AppUser.objects.get(id=user_id)
+    except AppUser.DoesNotExist:
+        return HttpResponse(status=404)
+
+    outgoing_connection_status = ""
+    incoming_connection_status = ""
+    current_contact = False
+
+    outgoing_connections = ConnectionRequest.objects.filter(Q(initiated_by_id=request.user.id) & Q(sent_to_id=user_id_record.id))
+    incoming_connections = ConnectionRequest.objects.filter(Q(initiated_by_id=user_id_record.id) & Q(sent_to_id=request.user.id))
+
+    for record in outgoing_connections:
+        if record.status == 'pending':
+            outgoing_connection_status = 'pending'
+
+    for record in incoming_connections:
+        if record.status == 'pending':
+            incoming_connection_status = 'pending'
+
+    user_instance = AppUser.objects.get(id=request.user.id)
+    serializer = AppUserSerializer(user_instance)
+    contacts = serializer.data['contacts']
+
+    if user_id_record.id in contacts:
+        current_contact = True
+
+    # print(contacts)
+    # print(current_contact)
+
+    if request.method == 'GET':
+        status_update_history = StatusUpdate.objects.filter(author=user_id_record.id).order_by('-posted_on')
+        status_update_list = []
+        for element in status_update_history:
+            status_update_list.append(element)
+
+        return render(request, 'profile.html', {'profile':user_id_record, 
+                                                'status_update_list': status_update_list, 
+                                                'outgoing_connection_status': outgoing_connection_status, 
+                                                'incoming_connection_status': incoming_connection_status,
+                                                'current_contact': current_contact })
+    else:
+        return HttpResponse("Invalid request")
+
+@login_required
+def connect_initiate(request):
+    if request.method == 'POST':
+        initiated_by_instance = AppUser.objects.get(id=request.POST['initiated_by'])
+        sent_to_instance = AppUser.objects.get(id=request.POST['sent_to']) 
+        connection_record = ConnectionRequest(initiated_by = initiated_by_instance, sent_to = sent_to_instance)
+        connection_record.save()
+        return render(request, 'request_result.html', {'text': 'Connection Request sent'})
+    else:
+        return HttpResponse("Invalid request")
+
+@login_required
+def connect_accept(request):
+    if request.method == 'POST':
+        # get instance objects for logged in user and profile user
+        initiated_by_instance = AppUser.objects.get(id=request.POST['initiated_by'])
+        sent_to_instance = AppUser.objects.get(id=request.POST['sent_to'])
+        # mark the pending connection requests from the profile user as completed
+        connection_requests = ConnectionRequest.objects.filter(Q(initiated_by=initiated_by_instance) & Q(sent_to=sent_to_instance))
+        for connection in connection_requests:
+            if connection.status == 'pending':
+                connection.status = 'completed'
+                connection.save()
+        # mark the pending outgoing connection request to the profile user as completed
+        connection_requests = ConnectionRequest.objects.filter(Q(initiated_by=sent_to_instance) & Q(sent_to=initiated_by_instance))
+        for connection in connection_requests:
+            if connection.status == 'pending':
+                connection.status = 'completed'
+                connection.save()
+        # add profile user as a contact of the logged in user
+        initiated_by_instance.contacts.add(sent_to_instance)
+        # add logged in user as a contact of the profile user
+        sent_to_instance.contacts.add(initiated_by_instance)
+        return render(request, 'request_result.html', {'text': 'Connection Request accepted'})
+    else:
+        return HttpResponse("Invalid request")
+
+@login_required
+def connect_reject(request):
+    if request.method == 'POST':
+        # get instance objects for logged in user and profile user
+        initiated_by_instance = AppUser.objects.get(id=request.POST['initiated_by'])
+        sent_to_instance = AppUser.objects.get(id=request.POST['sent_to'])
+        # mark the pending connection requests from the profile user as closed
+        connection_requests = ConnectionRequest.objects.filter(Q(initiated_by=initiated_by_instance) & Q(sent_to=sent_to_instance))
+        for connection in connection_requests:
+            if connection.status == 'pending':
+                connection.status = 'closed'
+                connection.save()
+        # mark the pending outgoing connection request to the profile user as closed
+        connection_requests = ConnectionRequest.objects.filter(Q(initiated_by=sent_to_instance) & Q(sent_to=initiated_by_instance))
+        for connection in connection_requests:
+            if connection.status == 'pending':
+                connection.status = 'closed'
+                connection.save()
+        return render(request, 'request_result.html', {'text': 'Connection Request rejected'})
+    else:
+        return HttpResponse("Invalid request")
+
+@login_required
+def connect_withdraw(request):
+    if request.method == 'POST':
+        # get instance objects for logged in user and profile user
+        initiated_by_instance = AppUser.objects.get(id=request.POST['initiated_by'])
+        sent_to_instance = AppUser.objects.get(id=request.POST['sent_to'])
+        # mark the pending connection requests from the profile user as closed
+        connection_requests = ConnectionRequest.objects.filter(Q(initiated_by=initiated_by_instance) & Q(sent_to=sent_to_instance))
+        for connection in connection_requests:
+            if connection.status == 'pending':
+                connection.status = 'closed'
+                connection.save()
+        # mark the pending outgoing connection request to the profile user as closed
+        connection_requests = ConnectionRequest.objects.filter(Q(initiated_by=sent_to_instance) & Q(sent_to=initiated_by_instance))
+        for connection in connection_requests:
+            if connection.status == 'pending':
+                connection.status = 'closed'
+                connection.save()
+        return render(request, 'request_result.html', {'text': 'Connection Request withdrawn'})
+    else:
+        return HttpResponse("Invalid request")
+
+@login_required
+def current_contacts(request):
+    if request.method == 'GET':
+        user_instance = AppUser.objects.get(id=request.user.id)
+        serializer = AppUserSerializer(user_instance)
+        contacts = serializer.data['contacts']
+        results_list = []
+        for result in contacts:
+            contact = AppUser.objects.get(id=result)
+            results_list.append(contact)
+        return render(request, 'search_results.html', {'results_list': results_list})
+    else:
+        return HttpResponse("Invalid request")
+
+@login_required
+def incoming_connection_requests(request):
+    if request.method == 'GET':
+        results = ConnectionRequest.objects.filter(Q(sent_to=request.user) & Q(status='pending'))
+        results_list = []
+        for result in results:
+            results_list.append(result.initiated_by)
+        return render(request, 'search_results.html', {'results_list': results_list})
+    else:
+        return HttpResponse("Invalid request")
+
+@login_required
+def outgoing_connection_requests(request):
+    if request.method == 'GET':
+        results = ConnectionRequest.objects.filter(Q(initiated_by=request.user) & Q(status='pending'))
+        results_list = []
+        for result in results:
+            results_list.append(result.sent_to)
+        return render(request, 'search_results.html', {'results_list': results_list})
+    else:
+        return HttpResponse("Invalid request")
+
+def media_settings(request):
+    print(settings.MEDIA_URL)
+    print(settings.MEDIA_ROOT)
+    return HttpResponse("Media settings invoked")
+
+@login_required
+def update_profile(request):
+    if request.method == 'POST':
+        user_form = UpdateForm(request.POST, request.FILES)
+        
+        if user_form.is_valid():
+            user_instance = AppUser.objects.get(id=request.user.id)
+
+
+            user_instance.first_name = user_form.cleaned_data.get('first_name')
+            user_instance.last_name = user_form.cleaned_data.get('last_name')
+            user_instance.country = user_form.cleaned_data.get('country')
+            user_instance.about_user = user_form.cleaned_data.get('about_user')
+
+            if len(request.FILES) > 0:
+                user_instance.photo = request.FILES['photo']
+                try:
+                    # remove current profile photo, if it exists
+                    os.remove(user_instance.photo.path)
+                except Exception as error:
+                    print(error)
+
+            user_instance.save()
+
+            return HttpResponseRedirect('/')
+
+    else:
+        data = {'first_name': request.user.first_name, 
+                'last_name': request.user.last_name,
+                'country': request.user.country,
+                'about_user': request.user.about_user}
+        user_form = UpdateForm(data)
+        return render(request, 'update_profile.html', {'user_form': user_form})
+
+@login_required
+def upload_photo(request):
+    if request.method == 'POST':
+        upload_form = PhotoUploadForm(request.POST, request.FILES)
+        if upload_form.is_valid():
+            photo_record = UserPhoto(owner = request.user, photo = request.FILES['photo'])
+            photo_record.save()
+            return HttpResponseRedirect('gallery')
+        else:
+            return HttpResponse("Invalid submission")
+    else:
+        upload_form = PhotoUploadForm()
+        return HttpResponse("Invalid request")
+
+@login_required
+def gallery(request):
+    if request.method == 'GET':
+        user_photos = UserPhoto.objects.filter(owner=request.user).order_by('-added_on')
+        user_photos_list = []
+        for record in user_photos:
+            user_photos_list.append(record.photo)
+        upload_form = PhotoUploadForm()
+        return render(request, 'gallery.html', {'photos': user_photos_list, 'upload_form': upload_form, 'photos_user': request.user})
+    else:
+        return HttpResponse("Invalid request")
+
+@login_required
+def get_gallery(request, user_id):
+    try:
+        user_id_record = AppUser.objects.get(id=user_id)
+    except AppUser.DoesNotExist:
+        return HttpResponse(status=404)
+
+    if request.method == 'GET':
+        user_photos = UserPhoto.objects.filter(owner=user_id_record.id).order_by('-added_on')
+        user_photos_list = []
+        for record in user_photos:
+            user_photos_list.append(record.photo)
+        return render(request, 'gallery.html', {'photos': user_photos_list, 'photos_user': user_id_record})
+    else:
+        return HttpResponse("Invalid request")

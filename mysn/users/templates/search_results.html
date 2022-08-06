@@ -1,0 +1,9 @@
+{% extends "./base.html" %}
+
+{% block content %}
+
+{% for result in results_list %}
+    <a href="../get_profile/{{ result.id }}">{{ result.first_name}} {{ result.last_name }}</a><br/>
+{% endfor %}
+
+{% endblock %}
