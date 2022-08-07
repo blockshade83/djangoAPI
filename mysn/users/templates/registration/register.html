@@ -6,7 +6,9 @@
 
     <form id="user_form" method="post" action = "{% url 'register' %}" enctype="multipart/form-data">
         {% csrf_token %}
-        {{ user_form.as_table }}
+        <table>
+            {{ user_form.as_table }}
+        </table>
         <input type="submit" name="submit" value="Register" />
     </form>
 

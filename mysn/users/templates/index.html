@@ -57,7 +57,11 @@
     {% if user.is_authenticated %}
         <h4>Chat</h4>
         {% for contact in contacts %}
-            <a href="/chat/room1">{{ contact.first_name}} {{ contact.last_name }}</a><br/>
+            {% if contact.id < user.id %}
+                <a href="/chat/{{contact.id}}and{{user.id}}">{{ contact.first_name}} {{ contact.last_name }}</a><br/>
+            {% else %}
+                <a href="/chat/{{user.id}}and{{contact.id}}">{{ contact.first_name}} {{ contact.last_name }}</a><br/>
+            {% endif %}
         {% endfor %}
     {% endif %}
 {% endblock right_section %}
