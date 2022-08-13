@@ -4,8 +4,15 @@
 
     <!-- all actions relevant only for profiles of users other than the logged in user -->
     {% if user.is_authenticated %}
-        <h3>{{ profile.first_name }} {{ profile.last_name }}'s Profile</h3>
+        <table>
+            <tr>
+                <td style="padding:10px"><img src="{{ profile.get_photo }}" alt="user profile photo" width="60" height="60"></td>
+                <td style="padding:10px"><h3>{{ profile.first_name }} {{ profile.last_name }}'s Profile</h3></td>
+            </tr>
+        </table>
+        
         <a href="../get_gallery/{{profile.id}}">User's Gallery</a>
+        <br/>
 
         <!-- Checking if the profile user is a current connection -->
         {% if current_contact %}

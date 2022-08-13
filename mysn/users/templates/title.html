@@ -20,7 +20,7 @@
 <div class="col-sm-1" id="user">
     {% if user.is_authenticated %}
         <img src="{{ user.get_photo }}" alt="user profile photo" width="25" height="25">
-        <a class="nav_link" href="get_profile/{{user.id}}">{{ user.first_name }}</a>
+        <a class="nav_link" href="../get_profile/{{user.id}}">{{ user.first_name }}</a>
     {% else %}
         <a class="nav_link" href="{% url 'register' %}">Register</a>
     {% endif %}
