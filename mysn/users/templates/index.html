@@ -1,34 +1,5 @@
 {% extends "./base.html" %}
 
-{% block left_section %}
-
-    {% if user.is_authenticated %}
-        <img src="{{ user.get_photo }}" alt="user profile photo" width="100" height="100">
-        <h4>Friend Requests</h4>
-        <a href="{% url 'current_contacts' %}" style="padding:10px;">Current Contacts</a><br/>
-
-        {% if incoming_connections > 0 %}
-        <a href="{% url 'incoming_connection_requests' %}" style="padding:10px;">Incoming Requests ({{incoming_connections}})</a><br/>
-        {% else %}
-        <p style="color:gray;margin:0;padding-left:10px">Incoming Requests</p>
-        {% endif %}
-
-        {% if outgoing_connections > 0 %}
-        <a href="{% url 'outgoing_connection_requests' %}" style="padding:10px">Outgoing Requests ({{outgoing_connections}})</a>
-        {% else %}
-        <p style="color:gray;margin:0;padding-left:10px;">Outgoing Requests</p>
-        {% endif %}
-
-        <a href="{% url 'media_settings' %}" style="padding:10px">Media Settings</a><br/>
-        <a href="{% url 'update_profile' %}" style="padding:10px">Update Profile</a><br/>
-        <a href="{% url 'gallery' %}" style="padding:10px">Gallery</a><br/>
-
-    {% else %}
-        <p>Some text here</p>
-    {% endif %}
-
-{% endblock %}
-
 {% block content %}
 
     {% if user.is_authenticated %}
@@ -36,32 +7,22 @@
             {% csrf_token %}
             <p> What do you want to talk about?</p>
             {{ status_update_form.as_p }}
-            <input type="submit" name="submit_status_update" value="Post" />
+            <input class="btn btn-primary" type="submit" name="submit_status_update" value="Post" />
         </form>
-        <br/>
+        <br/><br/>
         <h4>My status updates</h4><br/>
         {% for status_update in status_update_list %}
-            <div class="container-fluid" style="border:1px solid lightgray; border-radius: 5px; background-color:white;">
-                <p style="color:gray"> {{ status_update.posted_on }} <br/> </p>
+            <div style="border:1px solid lightgray; border-radius: 5px;padding: 10px;width:75%;">
+                <p style="color:gray;font-size:0.8em;"> {{ status_update.posted_on }} <br/> </p>
                 <p> {{ status_update.content }} <br/> </p>
             </div> <br/>
         {% endfor %}
 
     {% else %}
-        <h2>Some info about Kune</h2>
+        <img src="../../media/background-1.jpeg" style="max-width:100%;">
     {% endif %}
 
 {% endblock content%}
 
 {% block right_section %}
-    {% if user.is_authenticated %}
-        <h4>Chat</h4>
-        {% for contact in contacts %}
-            {% if contact.id < user.id %}
-                <a href="/chat/{{contact.id}}and{{user.id}}">{{ contact.first_name}} {{ contact.last_name }}</a><br/>
-            {% else %}
-                <a href="/chat/{{user.id}}and{{contact.id}}">{{ contact.first_name}} {{ contact.last_name }}</a><br/>
-            {% endif %}
-        {% endfor %}
-    {% endif %}
 {% endblock right_section %}

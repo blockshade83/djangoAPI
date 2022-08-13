@@ -1,0 +1,36 @@
+    {% if user.is_authenticated %}
+        <br/><br/>
+        <h4>Contacts</h4>
+        <a href="{% url 'current_contacts' %}" style="padding:10px;font-size:0.9em">Current Contacts</a><br/>
+
+        {% if incoming_connections > 0 %}
+        <a href="{% url 'incoming_connection_requests' %}" style="padding:10px;font-size:0.9em">Incoming Requests ({{incoming_connections}})</a>
+        <br/>
+        {% else %}
+        <p style="color:gray;margin:0;padding-left:10px;font-size:0.9em">Incoming Requests</p>
+        {% endif %}
+
+        {% if outgoing_connections > 0 %}
+        <a href="{% url 'outgoing_connection_requests' %}" style="padding:10px;font-size:0.9em">Outgoing Requests ({{outgoing_connections}})</a>
+        {% else %}
+        <p style="color:gray;margin:0;padding-left:10px;font-size:0.9em">Outgoing Requests</p>
+        {% endif %}
+        <br/><br/>
+        <a href="{% url 'update_profile' %}">Update Profile</a><br/>
+        <a href="{% url 'gallery' %}">Gallery</a>
+        
+        <br/></br>
+
+        <h4>Chat</h4>
+        {% for contact in contacts %}
+            {% if contact.id < user.id %}
+                <a href="/chat/{{contact.id}}and{{user.id}}" style="padding:10px;font-size:0.9em;">{{ contact.first_name}} {{ contact.last_name }}</a><br/>
+            {% else %}
+                <a href="/chat/{{user.id}}and{{contact.id}}" style="padding:10px;font-size:0.9em;">{{ contact.first_name}} {{ contact.last_name }}</a><br/>
+            {% endif %}
+        {% endfor %}
+
+    {% else %}
+        <br/><br/><br/><br/><br/><br/>
+        <p style="text-align:right">What if there was a different wait to spend your time on social media?</p>
+    {% endif %}

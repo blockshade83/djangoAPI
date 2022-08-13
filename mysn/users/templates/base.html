@@ -1,27 +1,25 @@
-{% load bootstrap4 %}
 {% include "./header.html" %}
 
 <div class="container-fluid" >
-    <div class="row">
-        <div class="col-sm-2" id="top-left-section">
-            {% include "./title.html" %}
-        </div>
-
-        <div class="col-sm-2" id="top-search-section">
-            {% include "./search.html" %}
-        </div>
-    </div>
+    <div class="row" style="min-height:10px;"></div>
     
-    <div class="row" style="background-color: seashell">
-        <div class="col-sm-2" id="left-section" style="background-color: white; margin: 1%; border-radius: 15px;">
-            {% block left_section %}{% endblock %}
+    <div class="row">
+        {% include "./title.html" %}
+    </div>
+    <hr style="height:1px;color:lightgray;">
+    
+    <div class="row" style="min-height:400px;">
+        <div class="col-sm-2" id="left-section" style="background-color: white; margin: 1%; border-right: 1px solid lightgrey;padding:10px">
+            {% block left_section %}
+                {% include "./left_section.html" %}
+            {% endblock %}
         </div>
 
-        <div class="col-sm-5" id="content" style="background-color: seashell; margin: 1%; border-radius: 15px;">
+        <div class="col-sm-8" id="content" style="background-color: white; margin: 1%;">
             {% block content %}{% endblock %}
         </div>
 
-        <div class="col-sm-3" id="right-section" style="background-color: white; margin: 1%; border-radius: 15px;">
+        <div class="col-sm-1" id="right-section" style="background-color: white; margin: 1%; border-radius: 15px;">
             {% block right_section %}{% endblock%}
         </div>
     </div>

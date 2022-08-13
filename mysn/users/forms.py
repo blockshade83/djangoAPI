@@ -11,6 +11,14 @@ class RegistrationForm(UserCreationForm):
     country = forms.CharField(required = True, label = 'Country', max_length = 100)
     about_user = forms.CharField(required = False, label = 'Add some information about you', max_length = 1000)
 
+    # hide help text coming from UserCreationForm class settings
+    # https://stackoverflow.com/questions/13202845/removing-help-text-from-django-usercreateform
+    def __init__(self, *args, **kwargs):
+        super(RegistrationForm, self).__init__(*args, **kwargs)
+
+        for fieldname in ['username', 'password1', 'password2']:
+            self.fields[fieldname].help_text = None
+
     def clean(self):
         super(UserCreationForm, self).clean()
 

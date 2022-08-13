@@ -10,6 +10,17 @@ from .forms import *
 from .serializers import *
 import os
 
+# function to return the contacts of the user
+def get_contacts(userid):
+    user_instance = AppUser.objects.get(id=userid)
+    serializer = AppUserSerializer(user_instance)
+    contacts = serializer.data['contacts']
+    contacts_list = []
+    for result in contacts:
+        contact = AppUser.objects.get(id=result)
+        contacts_list.append(contact)
+    return contacts_list
+
 def index(request):
     if request.user.is_authenticated:
         status_update_form = StatusUpdateForm()
@@ -21,14 +32,7 @@ def index(request):
 
         incoming_connections = ConnectionRequest.objects.filter(Q(sent_to=request.user) & Q(status='pending')).count()
         outgoing_connections = ConnectionRequest.objects.filter(Q(initiated_by=request.user) & Q(status='pending')).count()
-
-        user_instance = AppUser.objects.get(id=request.user.id)
-        serializer = AppUserSerializer(user_instance)
-        contacts = serializer.data['contacts']
-        contacts_list = []
-        for result in contacts:
-            contact = AppUser.objects.get(id=result)
-            contacts_list.append(contact)
+        contacts_list = get_contacts(request.user.id)
 
         return render(request, 'index.html', {'status_update_form': status_update_form, 
                                               'status_update_list': status_update_list,
@@ -85,11 +89,20 @@ def status_update(request):
 def search(request):
     if request.method == 'GET':
         search_text = request.GET.get('search_text')
-        results = AppUser.objects.filter(Q(username__icontains=search_text) | Q(first_name__icontains=search_text) | Q(last_name__icontains=search_text))
+        search_text_list = search_text.split()
         results_list = []
-        for result in results:
-            results_list.append(result)
-        return render(request, 'search_results.html', {'results_list': results_list})
+        for word in search_text_list:
+            results = AppUser.objects.filter(Q(username__icontains=word) | Q(first_name__icontains=word) | Q(last_name__icontains=word))
+            for result in results:
+                if result not in results_list:
+                    results_list.append(result)
+        incoming_connections = ConnectionRequest.objects.filter(Q(sent_to=request.user) & Q(status='pending')).count()
+        outgoing_connections = ConnectionRequest.objects.filter(Q(initiated_by=request.user) & Q(status='pending')).count()
+        contacts_list = get_contacts(request.user.id)
+        return render(request, 'search_results.html', {'results_list': results_list, 
+                                                       'incoming_connections': incoming_connections,
+                                                       'outgoing_connections': outgoing_connections,
+                                                       'contacts': contacts_list})
     else:
         return HttpResponse("Invalid request")
 
@@ -131,20 +144,23 @@ def get_profile(request, user_id):
     if user_id_record.id in contacts:
         current_contact = True
 
-    # print(contacts)
-    # print(current_contact)
-
     if request.method == 'GET':
         status_update_history = StatusUpdate.objects.filter(author=user_id_record.id).order_by('-posted_on')
         status_update_list = []
         for element in status_update_history:
             status_update_list.append(element)
-
+        
+        incoming_connections = ConnectionRequest.objects.filter(Q(sent_to=request.user) & Q(status='pending')).count()
+        outgoing_connections = ConnectionRequest.objects.filter(Q(initiated_by=request.user) & Q(status='pending')).count()
+        contacts_list = get_contacts(request.user.id)
         return render(request, 'profile.html', {'profile':user_id_record, 
                                                 'status_update_list': status_update_list, 
                                                 'outgoing_connection_status': outgoing_connection_status, 
                                                 'incoming_connection_status': incoming_connection_status,
-                                                'current_contact': current_contact })
+                                                'incoming_connections': incoming_connections,
+                                                'outgoing_connections': outgoing_connections,
+                                                'current_contact': current_contact ,
+                                                'contacts': contacts_list})
     else:
         return HttpResponse("Invalid request")
 
@@ -155,7 +171,9 @@ def connect_initiate(request):
         sent_to_instance = AppUser.objects.get(id=request.POST['sent_to']) 
         connection_record = ConnectionRequest(initiated_by = initiated_by_instance, sent_to = sent_to_instance)
         connection_record.save()
-        return render(request, 'request_result.html', {'text': 'Connection Request sent'})
+        contacts_list = get_contacts(request.user.id)
+        return render(request, 'request_result.html', {'text': 'Connection Request sent', 
+                                                       'contacts': contacts_list})
     else:
         return HttpResponse("Invalid request")
 
@@ -181,7 +199,11 @@ def connect_accept(request):
         initiated_by_instance.contacts.add(sent_to_instance)
         # add logged in user as a contact of the profile user
         sent_to_instance.contacts.add(initiated_by_instance)
-        return render(request, 'request_result.html', {'text': 'Connection Request accepted'})
+        incoming_connections = ConnectionRequest.objects.filter(Q(sent_to=request.user) & Q(status='pending')).count()
+        outgoing_connections = ConnectionRequest.objects.filter(Q(initiated_by=request.user) & Q(status='pending')).count()
+        contacts_list = get_contacts(request.user.id)
+        return render(request, 'request_result.html', {'text': 'Connection Request accepted', 
+                                                       'contacts': contacts_list})
     else:
         return HttpResponse("Invalid request")
 
@@ -203,7 +225,13 @@ def connect_reject(request):
             if connection.status == 'pending':
                 connection.status = 'closed'
                 connection.save()
-        return render(request, 'request_result.html', {'text': 'Connection Request rejected'})
+        incoming_connections = ConnectionRequest.objects.filter(Q(sent_to=request.user) & Q(status='pending')).count()
+        outgoing_connections = ConnectionRequest.objects.filter(Q(initiated_by=request.user) & Q(status='pending')).count()
+        contacts_list = get_contacts(request.user.id)
+        return render(request, 'request_result.html', {'text': 'Connection Request rejected', 
+                                                       'incoming_connections': incoming_connections,
+                                                       'outgoing_connections': outgoing_connections,
+                                                       'contacts': contacts_list})
     else:
         return HttpResponse("Invalid request")
 
@@ -225,7 +253,13 @@ def connect_withdraw(request):
             if connection.status == 'pending':
                 connection.status = 'closed'
                 connection.save()
-        return render(request, 'request_result.html', {'text': 'Connection Request withdrawn'})
+        incoming_connections = ConnectionRequest.objects.filter(Q(sent_to=request.user) & Q(status='pending')).count()
+        outgoing_connections = ConnectionRequest.objects.filter(Q(initiated_by=request.user) & Q(status='pending')).count()
+        contacts_list = get_contacts(request.user.id)
+        return render(request, 'request_result.html', {'text': 'Connection Request withdrawn', 
+                                                       'incoming_connections': incoming_connections,
+                                                       'outgoing_connections': outgoing_connections,
+                                                       'contacts': contacts_list})
     else:
         return HttpResponse("Invalid request")
 
@@ -239,7 +273,13 @@ def current_contacts(request):
         for result in contacts:
             contact = AppUser.objects.get(id=result)
             results_list.append(contact)
-        return render(request, 'search_results.html', {'results_list': results_list})
+        incoming_connections = ConnectionRequest.objects.filter(Q(sent_to=request.user) & Q(status='pending')).count()
+        outgoing_connections = ConnectionRequest.objects.filter(Q(initiated_by=request.user) & Q(status='pending')).count()
+        contacts_list = get_contacts(request.user.id)
+        return render(request, 'search_results.html', {'results_list': results_list, 
+                                                       'incoming_connections': incoming_connections,
+                                                       'outgoing_connections': outgoing_connections,
+                                                       'contacts': contacts_list})
     else:
         return HttpResponse("Invalid request")
 
@@ -250,7 +290,13 @@ def incoming_connection_requests(request):
         results_list = []
         for result in results:
             results_list.append(result.initiated_by)
-        return render(request, 'search_results.html', {'results_list': results_list})
+        incoming_connections = ConnectionRequest.objects.filter(Q(sent_to=request.user) & Q(status='pending')).count()
+        outgoing_connections = ConnectionRequest.objects.filter(Q(initiated_by=request.user) & Q(status='pending')).count()
+        contacts_list = get_contacts(request.user.id)
+        return render(request, 'search_results.html', {'results_list': results_list, 
+                                                       'incoming_connections': incoming_connections,
+                                                       'outgoing_connections': outgoing_connections,
+                                                       'contacts': contacts_list})
     else:
         return HttpResponse("Invalid request")
 
@@ -261,14 +307,15 @@ def outgoing_connection_requests(request):
         results_list = []
         for result in results:
             results_list.append(result.sent_to)
-        return render(request, 'search_results.html', {'results_list': results_list})
+        incoming_connections = ConnectionRequest.objects.filter(Q(sent_to=request.user) & Q(status='pending')).count()
+        outgoing_connections = ConnectionRequest.objects.filter(Q(initiated_by=request.user) & Q(status='pending')).count()
+        contacts_list = get_contacts(request.user.id)
+        return render(request, 'search_results.html', {'results_list': results_list, 
+                                                       'incoming_connections': incoming_connections,
+                                                       'outgoing_connections': outgoing_connections,
+                                                       'contacts': contacts_list})
     else:
         return HttpResponse("Invalid request")
-
-def media_settings(request):
-    print(settings.MEDIA_URL)
-    print(settings.MEDIA_ROOT)
-    return HttpResponse("Media settings invoked")
 
 @login_required
 def update_profile(request):
@@ -277,8 +324,6 @@ def update_profile(request):
         
         if user_form.is_valid():
             user_instance = AppUser.objects.get(id=request.user.id)
-
-
             user_instance.first_name = user_form.cleaned_data.get('first_name')
             user_instance.last_name = user_form.cleaned_data.get('last_name')
             user_instance.country = user_form.cleaned_data.get('country')
@@ -293,7 +338,6 @@ def update_profile(request):
                     print(error)
 
             user_instance.save()
-
             return HttpResponseRedirect('/')
 
     else:
@@ -302,7 +346,13 @@ def update_profile(request):
                 'country': request.user.country,
                 'about_user': request.user.about_user}
         user_form = UpdateForm(data)
-        return render(request, 'update_profile.html', {'user_form': user_form})
+        incoming_connections = ConnectionRequest.objects.filter(Q(sent_to=request.user) & Q(status='pending')).count()
+        outgoing_connections = ConnectionRequest.objects.filter(Q(initiated_by=request.user) & Q(status='pending')).count()
+        contacts_list = get_contacts(request.user.id)
+        return render(request, 'update_profile.html', {'user_form': user_form, 
+                                                       'incoming_connections': incoming_connections,
+                                                       'outgoing_connections': outgoing_connections,
+                                                       'contacts': contacts_list})
 
 @login_required
 def upload_photo(request):
@@ -326,7 +376,15 @@ def gallery(request):
         for record in user_photos:
             user_photos_list.append(record.photo)
         upload_form = PhotoUploadForm()
-        return render(request, 'gallery.html', {'photos': user_photos_list, 'upload_form': upload_form, 'photos_user': request.user})
+        incoming_connections = ConnectionRequest.objects.filter(Q(sent_to=request.user) & Q(status='pending')).count()
+        outgoing_connections = ConnectionRequest.objects.filter(Q(initiated_by=request.user) & Q(status='pending')).count()
+        contacts_list = get_contacts(request.user.id)
+        return render(request, 'gallery.html', {'photos': user_photos_list, 
+                                                'upload_form': upload_form, 
+                                                'photos_user': request.user, 
+                                                'incoming_connections': incoming_connections,
+                                                'outgoing_connections': outgoing_connections,
+                                                'contacts': contacts_list})
     else:
         return HttpResponse("Invalid request")
 
@@ -342,6 +400,13 @@ def get_gallery(request, user_id):
         user_photos_list = []
         for record in user_photos:
             user_photos_list.append(record.photo)
-        return render(request, 'gallery.html', {'photos': user_photos_list, 'photos_user': user_id_record})
+        incoming_connections = ConnectionRequest.objects.filter(Q(sent_to=request.user) & Q(status='pending')).count()
+        outgoing_connections = ConnectionRequest.objects.filter(Q(initiated_by=request.user) & Q(status='pending')).count()
+        contacts_list = get_contacts(request.user.id)
+        return render(request, 'gallery.html', {'photos': user_photos_list, 
+                                                'photos_user': user_id_record, 
+                                                'incoming_connections': incoming_connections,
+                                                'outgoing_connections': outgoing_connections,
+                                                'contacts': contacts_list})
     else:
         return HttpResponse("Invalid request")

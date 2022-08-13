@@ -18,7 +18,6 @@ urlpatterns = [
     path('current_contacts', views.current_contacts, name = 'current_contacts'),
     path('incoming_connection_requests', views.incoming_connection_requests, name = 'incoming_connection_requests'),
     path('outgoing_connection_requests', views.outgoing_connection_requests, name = 'outgoing_connection_requests'),
-    path('media_settings', views.media_settings, name = 'media_settings'),
     path('update_profile', views.update_profile, name = 'update_profile'),
     path('upload_photo', views.upload_photo, name = 'upload_photo'),
     path('gallery', views.gallery, name = 'gallery'),

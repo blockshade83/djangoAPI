@@ -2,9 +2,9 @@
 
 {% block content %}
 
-    <textarea id="chat-log" style="min-height:200px;height:75%;width:100%;box-sizing:border-box;border-radius:15px;border-style:none;padding:5px;"></textarea><br>
-    <input id="chat-message-input" type="text" style="width:100%;box-sizing:border-box;border-radius:5px;border-style:none"><br>
-    <input id="chat-message-submit" type="button" value="Send" style="margin-top:5px;">
+    <textarea class="form-control z-depth-1" id="chat-log" readonly style="min-height:200px;width:75%;border-radius:5px;"></textarea><br>
+    <input class="form-control form-control-sm" id="chat-message-input" type="text" style="width:75%;box-sizing:border-box;border-radius:5px;"><br>
+    <input class="btn btn-primary" id="chat-message-submit" type="button" value="Send" style="margin-top:5px;">
     
     {{ room_name|json_script:"room-name" }}
     {{ first_name|json_script:"first-name" }}

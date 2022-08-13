@@ -3,7 +3,7 @@
 {% block content %}
 
     <!-- all actions relevant only for profiles of users other than the logged in user -->
-    {% if user.is_authenticated and user.id != profile.id %}
+    {% if user.is_authenticated %}
         <h3>{{ profile.first_name }} {{ profile.last_name }}'s Profile</h3>
         <a href="../get_gallery/{{profile.id}}">User's Gallery</a>
 
@@ -23,7 +23,7 @@
                                 {% csrf_token %}
                                 <input type="hidden" id="initiated_by" name="initiated_by" value="{{ profile.id }}"/>
                                 <input type="hidden" id="sent_to" name="sent_to" value="{{ user.id }}"/>
-                                <input type="submit" method="post" name="accept" value="Accept" />
+                                <input class="btn btn-primary" type="submit" method="post" name="accept" value="Accept" />
                             </form>
                         </td>
 
@@ -32,7 +32,7 @@
                                 {% csrf_token %}
                                 <input type="hidden" id="initiated_by" name="initiated_by" value="{{ profile.id }}"/>
                                 <input type="hidden" id="sent_to" name="sent_to" value="{{ user.id }}"/>
-                                <input type="submit" method="post" name="accept" value="Dismiss" />
+                                <input class="btn btn-primary" type="submit" method="post" name="accept" value="Dismiss" />
                             </form>
                         </td>
                     </tr>
@@ -45,17 +45,19 @@
                             {% csrf_token %}
                             <input type="hidden" id="initiated_by" name="initiated_by" value="{{ user.id }}"/>
                             <input type="hidden" id="sent_to" name="sent_to" value="{{ profile.id }}"/>
-                            <input type="submit" method="post" name="accept" value="Withdraw Request" />
+                            <input class="btn btn-primary" type="submit" method="post" name="accept" value="Withdraw Request" />
                         </form>
 
-                    <!-- no active or pending connection exists, showing a Connect button -->
+                    <!-- no active or pending connection exists, showing a Connect button if other than self -->
                     {% else %}
-                    <form id="connection" method="post" action="{% url 'connect' %}" enctype="multipart/form-data">
-                        {% csrf_token %}
-                        <input type="hidden" id="initiated_by" name="initiated_by" value="{{ user.id }}"/>
-                        <input type="hidden" id="sent_to" name="sent_to" value="{{ profile.id }}"/>
-                        <input type="submit" method="post" name="connect" value="Connect" />
-                    </form>
+                        {% if user.id != profile.id %}
+                            <form id="connection" method="post" action="{% url 'connect' %}" enctype="multipart/form-data">
+                                {% csrf_token %}
+                                <input type="hidden" id="initiated_by" name="initiated_by" value="{{ user.id }}"/>
+                                <input type="hidden" id="sent_to" name="sent_to" value="{{ profile.id }}"/>
+                                <input class="btn btn-primary" type="submit" method="post" name="connect" value="Connect" />
+                            </form>
+                        {% endif %}
                     {% endif %}
                 {% endif %}
         {% endif %}
@@ -63,8 +65,8 @@
         <br/>
 
         {% for status_update in status_update_list %}
-            <div class="container-fluid" style="border:1px solid lightgray; border-radius: 5px; background-color:white;">
-                <p style="color:gray"> {{ status_update.posted_on }} <br/> </p>
+            <div style="border:1px solid lightgray; border-radius: 5px; background-color:white;padding:10px;width:75%;">
+                <p style="color:gray;font-size:0.8em;"> {{ status_update.posted_on }} <br/> </p>
                 <p> {{ status_update.content }} <br/> </p>
             </div> <br/>
         {% endfor %}

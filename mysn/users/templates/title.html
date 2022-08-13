@@ -1,21 +1,37 @@
-<nav class="navbar navbar-expand-md sticky-top flex-column">
-    <div class="w-100 d-flex">
-        <div class="navbar-header" id="header">
-            <h2 id="application_title">Kune</h2>
-        </div>
-    </div>
-    <div class="w-100 d-flex">
-        <ul class="navbar-nav mr-auto" id="navigation">
-            <li class="nav-item active"><a class="nav_link" href="/">Home&nbsp;</a></li>
-            {% if user.is_authenticated %}
-            <li class="nav-item active"><a class="nav_link" href="#">Hello, {{ user.first_name }}&nbsp</a></li>
-            <li class="nav-item active"><a class="nav_link" href="{% url 'logout' %}">Logout</a></li>
-            {% else %}
-            <li class="nav-item active"><a class="nav_link" href="{% url 'register' %}">Register&nbsp</a></li>
-            <li class="nav-item active"><a class="nav_link" href="{% url 'login' %}">Login</a></li>
-            {% endif %}
-        </ul>
-    </div>
+<div class="col-sm-1" id="top-brand-section" style="min-width: 100px">
+    <h2 id="application_title">Kune</h2>
+</div>
 
-</nav>
+<div class="col-sm-4" id="top-search-section" style="min-width: 300px">
+    {% if user.is_authenticated %}
+    <form id="search_contacts" method="get" action = "{% url 'search' %}" enctype="text/plain"}>
+        <input class="form-control-sm" type="search" name="search_text" style="vertical-align:middle;" />
+        <input class="btn btn-primary btn-sm" type="submit" name="submit_search" value="Search" style="vertical-align:middle;"/>
+    </form>
+    {% endif %}
+</div>
+
+<div class="col-sm-2"></div>
+
+<div class="col-sm-1" id="home">
+    <a class="nav_link" href="/">Home&nbsp;</a>
+</div>
+
+<div class="col-sm-1" id="user">
+    {% if user.is_authenticated %}
+        <img src="{{ user.get_photo }}" alt="user profile photo" width="25" height="25">
+        <a class="nav_link" href="get_profile/{{user.id}}">{{ user.first_name }}</a>
+    {% else %}
+        <a class="nav_link" href="{% url 'register' %}">Register</a>
+    {% endif %}
+</div>
+
+<div class="col-sm-1" id="login-logout">
+    {% if user.is_authenticated %}
+        <a class="nav_link" href="{% url 'logout' %}">Logout</a>
+    {% else %}
+        <a class="nav_link" href="{% url 'login' %}">Login</a>
+    {% endif %}
+</div>
+
 
