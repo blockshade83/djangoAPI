@@ -1,28 +1,32 @@
 {% extends "base.html" %}
+
+<!-- override base.html and leave left section blank on login page -->
 {% block left_section %}{% endblock %}
+
 {% block content %}
 
-{% if error %}
-<p style="color:red;">Unsuccessful login. Please try again.</p>
-{% endif %}
+    {% if error %}
+        <p style="color:red;">Unsuccessful login. Please try again.</p>
+    {% endif %}
 
-{% if new_account %}
-<p style="color:blue">Account was succesfully created. Please login to continue.</p>
-{% endif %}
+    {% if new_account %}
+        <p style="color:blue">Account was succesfully created. Please login to continue.</p>
+    {% endif %}
 
-<h1 style="color:gray">Login</h1>
+    <h1 style="color:gray">Login</h1>
 
+    <!-- login form -->
     <form id="login_form" method="post" action="{% url 'login' %}" enctype="multipart/form-data">
         {% csrf_token %}
         <table class="table" style="width:50%;">
-        <tr>
-            <th>Username</th>
-            <td><input type="text" name="username" value="" size="25" /></td>
-        </tr>
-        <tr>
-            <th>Password</th>
-            <td><input type="password" name="password" value="" size="25" /></td>
-        </tr>
+            <tr>
+                <th>Username</th>
+                <td><input type="text" name="username" value="" size="25" /></td>
+            </tr>
+            <tr>
+                <th>Password</th>
+                <td><input type="password" name="password" value="" size="25" /></td>
+            </tr>
         </table>
         <input class="btn btn-primary" type="submit" name="submit" value="Login">
     </form>

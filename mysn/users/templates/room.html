@@ -2,18 +2,25 @@
 
 {% block content %}
 
+    <!-- display first name and last name of the person with whom the chat is in progress -->
+    <h2>{{connection.first_name}} {{connection.last_name}}</h2>
+    <!-- chat log -->
     <textarea class="form-control z-depth-1" id="chat-log" readonly style="min-height:200px;width:75%;border-radius:5px;"></textarea><br>
+    <!-- post new message to chat -->
     <input class="form-control form-control-sm" id="chat-message-input" type="text" style="width:75%;box-sizing:border-box;border-radius:5px;"><br>
     <input class="btn btn-primary" id="chat-message-submit" type="button" value="Send" style="margin-top:5px;">
     
+    <!-- script to process chat operation -->
     {{ room_name|json_script:"room-name" }}
     {{ first_name|json_script:"first-name" }}
     <script>
         const roomName = JSON.parse(document.getElementById('room-name').textContent);
         const firstName = JSON.parse(document.getElementById('first-name').textContent);
 
+        // open new web socket
         const chatSocket = new WebSocket('ws://' + window.location.host + '/ws/chat/' + roomName + '/');
 
+        // add message to the chat log
         chatSocket.onmessage = function(e) {
             const data = JSON.parse(e.data);
             document.querySelector('#chat-log').value += (data.message + '\n');
@@ -23,18 +30,21 @@
             console.log('open', e);
         }
 
+        // log message to console when chat socket is closed
         chatSocket.onclose = function(e) {
             console.error('Chat socket closed unexpectedly');
         };
 
+        // click Submit button when Enter/Return key is pressed
         document.querySelector('#chat-message-input').focus();
         document.querySelector('#chat-message-input').onkeyup = function(e) {
             if (e.keyCode === 13) { // enter, return}
                 document.querySelector('#chat-message-submit').click();
-                console.log("Enter key pressed")
             }
         };
 
+        // send message when Submit button is clicked
+        // empty the value of the message box
         document.querySelector('#chat-message-submit').onclick = function(e) {
             const messageInputDom = document.querySelector('#chat-message-input');
             const message = firstName + ":" + messageInputDom.value;

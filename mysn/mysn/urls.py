@@ -22,7 +22,6 @@ urlpatterns = [
     path('', include('users.urls')),
     path('chat/', include('chat.urls')),
     path('admin/', admin.site.urls),
-    # path('accounts/', include('django.contrib.auth.urls'))
 ]
 # setting obtained from https://djangocentral.com/managing-media-files-in-django/
 if settings.DEBUG:

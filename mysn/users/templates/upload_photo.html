@@ -2,7 +2,7 @@
 {% block content %}
 
 <h1>Update Photo</h1>
-
+    <!-- form for uploading of a new photo -->
     <form id="upload_form" method="post" action = "{% url 'upload_photo' %}" enctype="multipart/form-data">
         {% csrf_token %}
         <table>

@@ -114,6 +114,7 @@ def search(request):
 
 @login_required
 def get_user_instance(user_id):
+    print('get_user_instance function called')
     try:
         user_id_record = AppUser.objects.get(id=user_id)
     except AppUser.DoesNotExist:

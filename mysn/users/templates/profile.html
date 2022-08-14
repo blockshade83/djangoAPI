@@ -21,11 +21,10 @@
                 <!-- not an active connection, checking if there is any pending request from the profile user -->
                 {% if incoming_connection_status == "pending" %}
                 <p style="color:gray">Connection request pending. Accept Connection?</p>
-                <!-- add Acceptance button and Dismiss buttons -->
-                <!-- add to contact list for both users -->
                 <table>
                     <tr>
                         <td>
+                            <!-- acceptance button and hidden form -->
                             <form id="connection_accept" method="post" action="{% url 'connect_accept' %}" enctype="multipart/form-data">
                                 {% csrf_token %}
                                 <input type="hidden" id="initiated_by" name="initiated_by" value="{{ profile.id }}"/>
@@ -35,6 +34,7 @@
                         </td>
 
                         <td>
+                            <!-- dismiss button and hidden form -->
                             <form id="connection_reject" method="post" action="{% url 'connect_reject' %}" enctype="multipart/form-data">
                                 {% csrf_token %}
                                 <input type="hidden" id="initiated_by" name="initiated_by" value="{{ profile.id }}"/>
@@ -48,6 +48,7 @@
                     <!-- checking if the current user had previously sent an invite that is pending -->
                     {% if outgoing_connection_status == "pending" %}
                         <p style="color:gray">Connection request pending</p>
+                        <!-- withdraw button and hidden form -->
                         <form id="connection_withdraw" method="post" action="{% url 'connect_withdraw' %}" enctype="multipart/form-data">
                             {% csrf_token %}
                             <input type="hidden" id="initiated_by" name="initiated_by" value="{{ user.id }}"/>
@@ -58,6 +59,7 @@
                     <!-- no active or pending connection exists, showing a Connect button if other than self -->
                     {% else %}
                         {% if user.id != profile.id %}
+                            <!-- connect button and hidden form -->
                             <form id="connection" method="post" action="{% url 'connect' %}" enctype="multipart/form-data">
                                 {% csrf_token %}
                                 <input type="hidden" id="initiated_by" name="initiated_by" value="{{ user.id }}"/>
@@ -71,6 +73,7 @@
         
         <br/>
 
+        <!-- show status update of the user -->
         {% for status_update in status_update_list %}
             <div style="border:1px solid lightgray; border-radius: 5px; background-color:white;padding:10px;width:75%;">
                 <p style="color:gray;font-size:0.8em;"> {{ status_update.posted_on }} <br/> </p>

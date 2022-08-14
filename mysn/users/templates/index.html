@@ -3,6 +3,7 @@
 {% block content %}
 
     {% if user.is_authenticated %}
+        <!-- post status update -->
         <form id="status_update_form" method="post" action = "{% url 'status_update' %}" enctype="multipart/form-data">
             {% csrf_token %}
             <p> What do you want to talk about?</p>
@@ -10,19 +11,18 @@
             <input class="btn btn-primary" type="submit" name="submit_status_update" value="Post" />
         </form>
         <br/><br/>
+        <!-- show previous status updates -->
         <h4>My status updates</h4><br/>
         {% for status_update in status_update_list %}
-            <div style="border:1px solid lightgray; border-radius: 5px;padding: 10px;width:75%;">
-                <p style="color:gray;font-size:0.8em;"> {{ status_update.posted_on }} <br/> </p>
-                <p> {{ status_update.content }} <br/> </p>
+            <div style="border:1px solid lightgray;border-radius:5px;padding:10px;width:75%;">
+                <p style="color:gray;font-size:0.8em;">{{ status_update.posted_on }}</p>
+                <p>{{ status_update.content }}</p>
             </div> <br/>
         {% endfor %}
 
+    <!-- if user is not logged in, show an image on the landing page -->
     {% else %}
         <img src="../../media/background-1.jpeg" style="max-width:100%;">
     {% endif %}
 
 {% endblock content%}
-
-{% block right_section %}
-{% endblock right_section %}

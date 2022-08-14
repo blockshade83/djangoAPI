@@ -3,29 +3,28 @@
 {% block content %}
 
     <h2>{{ photos_user.first_name }} {{photos_user.last_name }}'s Photos</h2>
-    <div>
-        <div class="jumbotron">
-            <div class="row">
-                {% for photo in photos %}
+    <div class="jumbotron">
+        <div class="row">
+            {% for photo in photos %}
                 <div class="col-sm-6 col-md-4 col-lg-3" >
                     <figure>
                         <img src="{{ photo.url }}" class="img-thumbnail">
                     </figure>
                 </div>
-                {% endfor %}
-            </div>
+            {% endfor %}
         </div>
     </div>
 
     {% if upload_form %}
-    <h4>Upload photo</h4>
-    <form id="upload_form" method="post" action = "{% url 'upload_photo' %}" enctype="multipart/form-data">
-        {% csrf_token %}
-        <table>
-            {{ upload_form.as_table }}
-        </table><br/>
-        <input class="btn btn-primary" type="submit" name="submit" value="Save" />
-    </form>
+    
+        <h4>Upload photo</h4>
+        <form id="upload_form" method="post" action = "{% url 'upload_photo' %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            <table>
+                {{ upload_form.as_table }}
+            </table><br/>
+            <input class="btn btn-primary" type="submit" name="submit" value="Save" />
+        </form>
 
     {% endif %}
 

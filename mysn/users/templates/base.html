@@ -6,6 +6,8 @@
     <div class="row">
         {% include "./title.html" %}
     </div>
+
+    <!-- add gray horizontal line -->
     <hr style="height:1px;color:lightgray;">
     
     <div class="row" style="min-height:400px;">
@@ -19,7 +21,7 @@
             {% block content %}{% endblock %}
         </div>
 
-        <div class="col-sm-1" id="right-section" style="background-color: white; margin: 1%; border-radius: 15px;">
+        <div class="col-sm-1" id="right-section" style="background-color: white;">
             {% block right_section %}{% endblock%}
         </div>
     </div>

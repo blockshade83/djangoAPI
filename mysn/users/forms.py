@@ -22,6 +22,7 @@ class RegistrationForm(UserCreationForm):
     def clean(self):
         super(UserCreationForm, self).clean()
 
+        # validation of form fields
         if self.cleaned_data.get('email') == '':
             raise ValidationError('Email field is mandatory')
 
@@ -77,23 +78,6 @@ class StatusUpdateForm(forms.Form):
     class Meta:
         model = StatusUpdate
         fields = ['author', 'content']
-
-# class ConnectionForm(forms.Form):
-#     # initiated_by = forms.CharField(required = True)
-#     # sent_to = forms.CharField(required = True)
-
-#     def clean(self):
-#         super(forms.Form, self).clean()
-
-#         if self.cleaned_data.get('initiated_by') == '':
-#             raise ValidationError('User cannot be empty')
-
-#         if self.cleaned_data.get('sent_to') == '':
-#             raise ValidationError('User to connect to cannot be empty')
-        
-#     class Meta:
-#         model = AppUser
-#         fields = ['initiated_by', 'sent_to']
 
 class PhotoUploadForm(forms.Form):
     owner = 'Owner'

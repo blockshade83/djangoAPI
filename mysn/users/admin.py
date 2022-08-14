@@ -3,10 +3,7 @@ from django.contrib.auth.admin import UserAdmin
 from .forms import RegistrationForm, UpdateForm
 from .models import *
 
-# fields = list(UserAdmin.fieldsets)
-# fields[0] = (None, {'fields': ('username', 'password', 'is_bot_flag')})
-# UserAdmin.fieldsets = tuple(fields)
-
+# customize UserAdmin class
 class CustomUserAdmin(UserAdmin):
     add_form = RegistrationForm
     form = UpdateForm
@@ -26,6 +23,7 @@ class CustomUserAdmin(UserAdmin):
     search_fields = ('email',)
     ordering = ('email',)
 
+# register models to admin site
 admin.site.register(AppUser, CustomUserAdmin)
 admin.site.register(StatusUpdate)
 admin.site.register(ConnectionRequest)
