@@ -35,11 +35,11 @@
 
                         <td>
                             <!-- dismiss button and hidden form -->
-                            <form id="connection_reject" method="post" action="{% url 'connect_reject' %}" enctype="multipart/form-data">
+                            <form id="connection_dismiss" method="post" action="{% url 'connect_close' %}" enctype="multipart/form-data">
                                 {% csrf_token %}
                                 <input type="hidden" id="initiated_by" name="initiated_by" value="{{ profile.id }}"/>
                                 <input type="hidden" id="sent_to" name="sent_to" value="{{ user.id }}"/>
-                                <input class="btn btn-primary" type="submit" method="post" name="accept" value="Dismiss" />
+                                <input class="btn btn-primary" type="submit" method="post" name="dismiss" value="Dismiss" />
                             </form>
                         </td>
                     </tr>
@@ -49,18 +49,18 @@
                     {% if outgoing_connection_status == "pending" %}
                         <p style="color:gray">Connection request pending</p>
                         <!-- withdraw button and hidden form -->
-                        <form id="connection_withdraw" method="post" action="{% url 'connect_withdraw' %}" enctype="multipart/form-data">
+                        <form id="connection_withdraw" method="post" action="{% url 'connect_close' %}" enctype="multipart/form-data">
                             {% csrf_token %}
                             <input type="hidden" id="initiated_by" name="initiated_by" value="{{ user.id }}"/>
                             <input type="hidden" id="sent_to" name="sent_to" value="{{ profile.id }}"/>
-                            <input class="btn btn-primary" type="submit" method="post" name="accept" value="Withdraw Request" />
+                            <input class="btn btn-primary" type="submit" method="post" name="withdraw" value="Withdraw Request" />
                         </form>
 
                     <!-- no active or pending connection exists, showing a Connect button if other than self -->
                     {% else %}
                         {% if user.id != profile.id %}
                             <!-- connect button and hidden form -->
-                            <form id="connection" method="post" action="{% url 'connect' %}" enctype="multipart/form-data">
+                            <form id="connection_initiate" method="post" action="{% url 'connect_initiate' %}" enctype="multipart/form-data">
                                 {% csrf_token %}
                                 <input type="hidden" id="initiated_by" name="initiated_by" value="{{ user.id }}"/>
                                 <input type="hidden" id="sent_to" name="sent_to" value="{{ profile.id }}"/>
